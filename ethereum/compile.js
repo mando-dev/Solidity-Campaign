@@ -1,0 +1,17 @@
+const path = require("path");   //we ususally rerun this file on node whenever we make changes on the Soldifuty contract. we run compilte.js first and then deplpy.js which are both inside our build folder. 
+const solc = require("solc");
+const fs = require("fs-extra");   //fs = file system from the Node module. This gives us file access to our local computer.fs-extra is a community made module
+
+const buildPath = path.resolve(__dirname,'build');    //to run the build script we have to pass it in as an argument of string: 'build'. __dirname gets us into our ethereum directory. current working directory = __dirname. gettin our path/reference to that build folder. using resolve method. logic to delete build folder if it already exists. purpose of this is so we only have to compile contracts once in order to avoid lags
+fs.removeSync(buildPath); //deleteing the whole build folder/ removeSynch is the extra func icluded in the fs-extra. with this reference to the build directory='buildPath' we can call a func in the fs module to remove that entire directory (build) and everything inside of it. 
+
+const campaignPath = path.resolve(__dirname, 'contracts', 'Campaign.sol');     //first getting a path to the Campaign contract file. reading the Campaign.sol from the 'contracts' folder
+const source = fs.readFileSync(campaignPath, 'utf8');    //reading in the source code of that file (campaignPath), then passing in the encoding of that file which is 'utf8
+const output = solc.compile(source, 1).contracts;      //so we gonna loop over this 'output' and write out the content into seperate files. output' here contains 2 seperate objects: output compiling Campaign contract and 2nd is output of compiling Campaing Factory contract. .the '.contracts' will be assigned to 'output'. the only property that we care about that is coming off of this compiling process is the contracts property. now we are compiling everything we just pulled out of that file/compiling both contracts with solidity compiler
+
+fs.ensureDirSync(buildPath);          //recreating the build folder we deleted earlier. passing in the buildPath we created earlier on line 5. 'ensureDir' checks to see if a directory exists, and if it does not exist-this func ensureDirSync will create the directory for us. 
+
+for (let contract in output){  //looping over this 'output' object and take each contract that exists inside there and write it out to a different file inside our build directory.'contract' will either store they colon keys string :Campoaign or CampaignFactory. //logging out output object.output is coming from solidity compiler
+     fs.outputJsonSync(path.resolve(buildPath, contract.replace(':', '') + '.json'), output[contract]);  //calling a func off of the fs module. passing in 2 seperate args. we are appending the .json extension to our contract key strings: Campagin and CampaignContract. The 2nd arg 'output[contract]' is what we actually want to write out to this json file. 'output' is that huge object code that we consoled logged-and we are trying to pull out the :Campaign or :CampaignFactory via 'output[contract]'
+     }          //building the path that we want to save this file to -which is in the build directory. 'contract' is the name of the contract that we just pulled out of this output object in this for loop. we also want to make sure it has a .json file extension. this was the first arg to the outputJsonSync func. for loop iterating through keys of objects.//2nd arg to the outputJSongSync func
+        
